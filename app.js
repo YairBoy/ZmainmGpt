@@ -76,9 +76,6 @@ const els = {
   currentTime: document.getElementById("current-time"),
   infoTitle: document.getElementById("info-title"),
   infoSubtitle: document.getElementById("info-subtitle"),
-  weekdayValue: document.getElementById("weekday-value"),
-  holidayValue: document.getElementById("holiday-value"),
-  omerValue: document.getElementById("omer-value"),
   shabbatTitle: document.getElementById("shabbat-title"),
   candleDate: document.getElementById("candle-date"),
   candleTime: document.getElementById("candle-time"),
@@ -87,10 +84,22 @@ const els = {
   grid: document.getElementById("zmanim-grid")
 };
 
-let hebcalCache = {
-  key: null,
-  data: null
-};
+const MEMORIAL_SOURCE_PATHS = [
+  "./data/memorials.xlsx",
+  "./data/memorials.xls",
+  "./data/memorials.csv"
+];
+
+function ensureMemorialNamesElement() {
+  let element = document.getElementById("info-names");
+  if (!element) {
+    element = document.createElement("p");
+    element.id = "info-names";
+    element.className = "info-panel__names";
+    els.infoSubtitle.insertAdjacentElement("afterend", element);
+  }
+  return element;
+}
 
 function parseConfig() {
   const params = new URLSearchParams(window.location.search);
@@ -204,22 +213,85 @@ function formatCurrentTime(timeZoneId) {
 }
 
 function formatDateLabel(timeZoneId) {
-  const civil = new Intl.DateTimeFormat("he-IL", {
+  const weekday = new Intl.DateTimeFormat("he-IL", {
     timeZone: timeZoneId,
-    weekday: "long",
-    month: "long",
+    weekday: "long"
+  }).format(new Date());
+  const gregorian = new Intl.DateTimeFormat("he-IL", {
+    timeZone: timeZoneId,
     day: "numeric",
+    month: "long",
     year: "numeric"
   }).format(new Date());
 
-  const hebrew = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
-    timeZone: timeZoneId,
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  }).format(new Date());
+  const hebrew = formatHebrewDateWithLetters(timeZoneId);
 
-  return `${civil} • ${hebrew}`;
+  return `${weekday} • ${hebrew} • ${gregorian}`;
+}
+
+function toHebrewNumeral(number) {
+  if (!Number.isFinite(number) || number <= 0) {
+    return "";
+  }
+
+  const ones = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
+  const tens = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"];
+  const hundreds = ["", "ק", "ר", "ש", "ת"];
+  const special = {
+    15: "טו",
+    16: "טז"
+  };
+
+  let value = Math.floor(number);
+  let result = "";
+
+  while (value >= 400) {
+    result += "ת";
+    value -= 400;
+  }
+
+  if (value >= 100) {
+    const count = Math.floor(value / 100);
+    result += hundreds[count];
+    value %= 100;
+  }
+
+  if (special[value]) {
+    result += special[value];
+    value = 0;
+  }
+
+  if (value >= 10) {
+    const count = Math.floor(value / 10);
+    result += tens[count];
+    value %= 10;
+  }
+
+  if (value > 0) {
+    result += ones[value];
+  }
+
+  if (result.length <= 1) {
+    return `${result}'`;
+  }
+
+  return `${result.slice(0, -1)}"${result.slice(-1)}`;
+}
+
+function formatHebrewDateWithLetters(timeZoneId) {
+  const parts = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
+    timeZone: timeZoneId,
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).formatToParts(new Date());
+
+  const day = Number(parts.find((part) => part.type === "day")?.value || 0);
+  const month = parts.find((part) => part.type === "month")?.value || "";
+  const year = Number(parts.find((part) => part.type === "year")?.value || 0);
+  const hebrewYear = year > 5000 ? year - 5000 : year;
+
+  return `${toHebrewNumeral(day)} ${month} ה׳${toHebrewNumeral(hebrewYear)}`;
 }
 
 function formatHebrewShortDate(dateTime, timeZoneId) {
@@ -229,13 +301,6 @@ function formatHebrewShortDate(dateTime, timeZoneId) {
     day: "numeric",
     month: "numeric"
   }).format(dateTime.toJSDate());
-}
-
-function formatHebrewWeekday(timeZoneId) {
-  return new Intl.DateTimeFormat("he-IL", {
-    timeZone: timeZoneId,
-    weekday: "long"
-  }).format(new Date());
 }
 
 function getNextZman(zmanim, timeZoneId) {
@@ -250,81 +315,181 @@ function getNextZman(zmanim, timeZoneId) {
   return null;
 }
 
-async function fetchHebcalData(config) {
-  const { DateTime } = window.KosherZmanim;
-  const today = DateTime.now().setZone(config.timeZoneId).toISODate();
-  const cacheKey = `${today}:${config.latitude}:${config.longitude}:${config.timeZoneId}`;
+function normalizeKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+}
 
-  if (hebcalCache.key === cacheKey) {
-    return hebcalCache.data;
+function parseHebrewNumber(rawValue) {
+  if (typeof rawValue === "number") {
+    return rawValue;
   }
 
-  const url = new URL("https://www.hebcal.com/hebcal");
-  url.searchParams.set("v", "1");
-  url.searchParams.set("cfg", "json");
-  url.searchParams.set("start", today);
-  url.searchParams.set("end", today);
-  url.searchParams.set("maj", "on");
-  url.searchParams.set("min", "on");
-  url.searchParams.set("mod", "on");
-  url.searchParams.set("nx", "on");
-  url.searchParams.set("mf", "on");
-  url.searchParams.set("ss", "on");
-  url.searchParams.set("s", "on");
-  url.searchParams.set("d", "on");
-  url.searchParams.set("o", "on");
-  url.searchParams.set("lg", "he");
-  url.searchParams.set("geo", "pos");
-  url.searchParams.set("latitude", String(config.latitude));
-  url.searchParams.set("longitude", String(config.longitude));
-  url.searchParams.set("tzid", config.timeZoneId);
+  const text = String(rawValue || "")
+    .replace(/['"׳״\s]/g, "")
+    .trim();
 
-  const response = await fetch(url.toString());
+  if (!text) {
+    return NaN;
+  }
+
+  if (/^\d+$/.test(text)) {
+    return Number(text);
+  }
+
+  const values = {
+    א: 1, ב: 2, ג: 3, ד: 4, ה: 5, ו: 6, ז: 7, ח: 8, ט: 9,
+    י: 10, כ: 20, ך: 20, ל: 30, מ: 40, ם: 40, נ: 50, ן: 50,
+    ס: 60, ע: 70, פ: 80, ף: 80, צ: 90, ץ: 90,
+    ק: 100, ר: 200, ש: 300, ת: 400
+  };
+
+  let total = 0;
+  for (const char of text) {
+    total += values[char] || 0;
+  }
+
+  return total;
+}
+
+function normalizeHebrewDay(rawValue) {
+  const numeric = parseHebrewNumber(rawValue);
+  return Number.isFinite(numeric) ? String(numeric) : "";
+}
+
+function normalizeHebrewYear(rawValue) {
+  const numeric = parseHebrewNumber(rawValue);
+  if (!Number.isFinite(numeric)) {
+    return "";
+  }
+  return String(numeric < 1000 ? numeric + 5000 : numeric);
+}
+
+function parseMemorialEntriesFromRows(rows) {
+  return rows
+    .map((row) => {
+      const normalized = Object.fromEntries(
+        Object.entries(row || {}).map(([key, value]) => [normalizeKey(key), value])
+      );
+
+      return {
+        name: String(normalized.name || normalized["שם"] || "").trim(),
+        day: normalizeHebrewDay(normalized.day || normalized["יום"]),
+        month: String(normalized.month || normalized["חודש"] || "").trim(),
+        year: normalizeHebrewYear(normalized.year || normalized["שנה"]),
+        afterSunset: String(
+          normalized.aftersunset ||
+          normalized.afterset ||
+          normalized["אחרישקיעה"] ||
+          normalized["אחרישקיעה?"] ||
+          "false"
+        ).trim()
+      };
+    })
+    .filter((entry) => entry.name && entry.day && entry.month && entry.year);
+}
+
+async function fetchMemorialEntriesFile() {
+  for (const path of MEMORIAL_SOURCE_PATHS) {
+    try {
+      const response = await fetch(path, { cache: "no-store" });
+      if (!response.ok) {
+        continue;
+      }
+
+      if (path.endsWith(".csv")) {
+        const text = await response.text();
+        const workbook = window.XLSX.read(text, { type: "string" });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        return parseMemorialEntriesFromRows(window.XLSX.utils.sheet_to_json(firstSheet, { defval: "" }));
+      }
+
+      const buffer = await response.arrayBuffer();
+      const workbook = window.XLSX.read(buffer, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      return parseMemorialEntriesFromRows(window.XLSX.utils.sheet_to_json(firstSheet, { defval: "" }));
+    } catch {
+      continue;
+    }
+  }
+
+  return [];
+}
+
+async function fetchMemorialForToday(entries, config) {
+  if (entries.length === 0) {
+    return [];
+  }
+
+  const today = window.KosherZmanim.DateTime.now().setZone(config.timeZoneId).toISODate();
+  const params = new URLSearchParams({
+    cfg: "json",
+    v: "yahrzeit",
+    years: "1",
+    hebdate: "on"
+  });
+
+  entries.forEach((entry, index) => {
+    const position = index + 1;
+    params.set(`n${position}`, entry.name);
+    params.set(`t${position}`, "Yahrzeit");
+    params.set(`hd${position}`, String(entry.day));
+    params.set(`hm${position}`, entry.month);
+    params.set(`hy${position}`, String(entry.year));
+    if (/^(true|on|1|yes)$/i.test(entry.afterSunset)) {
+      params.set(`s${position}`, "on");
+    }
+  });
+
+  const response = await fetch("https://www.hebcal.com/yahrzeit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: params.toString()
+  });
+
   if (!response.ok) {
-    throw new Error(`Hebcal request failed with ${response.status}`);
+    throw new Error(`Yahrzeit request failed with ${response.status}`);
   }
 
   const data = await response.json();
-  hebcalCache = { key: cacheKey, data };
-  return data;
-}
-
-function pickHebcalContent(items) {
-  const timedCategories = new Set(["hebdate"]);
-  const filtered = items.filter((item) => !timedCategories.has(item.category));
-  const firstHoliday = filtered.find((item) => ["holiday", "roshchodesh", "mevarchim", "omer"].includes(item.category));
-  const firstParsha = filtered.find((item) => item.category === "parashat");
-  const firstOmer = filtered.find((item) => item.category === "omer");
-
-  return {
-    holiday: firstHoliday?.hebrew || firstHoliday?.title || "יום רגיל",
-    parsha: firstParsha?.hebrew || firstParsha?.title || "ללא אירוע מיוחד",
-    omer: firstOmer?.hebrew || firstOmer?.title || "אין ספירה היום"
-  };
+  return (data.items || []).filter((item) => item.date === today);
 }
 
 async function renderInfoPanel(config) {
-  const hebrewDate = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
-    timeZone: config.timeZoneId,
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(new Date());
+  const namesElement = ensureMemorialNamesElement();
+  namesElement.textContent = "";
 
-  els.infoTitle.textContent = hebrewDate;
-  els.infoSubtitle.textContent = config.locationName;
-  els.weekdayValue.textContent = formatHebrewWeekday(config.timeZoneId);
-  els.holidayValue.textContent = "טוען...";
-  els.omerValue.textContent = "טוען...";
+  const entries = await fetchMemorialEntriesFile();
+  if (entries.length === 0) {
+    els.infoTitle.textContent = "אין אזכרה היום";
+    els.infoSubtitle.textContent = "לא נמצא קובץ הנצחה באתר";
+    return;
+  }
 
   try {
-    const data = await fetchHebcalData(config);
-    const content = pickHebcalContent(data.items || []);
-    els.holidayValue.textContent = content.holiday === "יום רגיל" ? content.parsha : content.holiday;
-    els.omerValue.textContent = content.omer === "אין ספירה היום" ? content.parsha : content.omer;
+    const matches = await fetchMemorialForToday(entries, config);
+    if (matches.length === 0) {
+      els.infoTitle.textContent = "אין אזכרה היום";
+      els.infoSubtitle.textContent = `${entries.length} שמות נטענו מקובץ ההנצחה`;
+      return;
+    }
+
+    const names = matches.map((item) => item.name || item.title).filter(Boolean);
+    const anniversaryText = matches.length === 1
+      ? `היום יום האזכרה של ${names[0]}`
+      : `היום יום האזכרה של ${matches.length} נפטרים`;
+
+    els.infoTitle.textContent = "נזכרים היום";
+    els.infoSubtitle.textContent = anniversaryText;
+    namesElement.textContent = names.join("\n");
   } catch (error) {
-    els.holidayValue.textContent = "לא נטען";
-    els.omerValue.textContent = "לא נטען";
+    els.infoTitle.textContent = "שגיאה בטעינת אזכרה";
+    els.infoSubtitle.textContent = "בדוק את קובץ ההנצחה או את החיבור לרשת";
+    namesElement.textContent = "";
   }
 }
 
@@ -411,9 +576,6 @@ function render(config) {
   if (!window.KosherZmanim) {
     els.infoTitle.textContent = "טעינת הספרייה נכשלה";
     els.infoSubtitle.textContent = "--";
-    els.weekdayValue.textContent = "--";
-    els.holidayValue.textContent = "בדוק רשת";
-    els.omerValue.textContent = "בדוק רשת";
     els.shabbatTitle.textContent = "טעינת הספרייה נכשלה";
     els.candleDate.textContent = "--";
     els.candleTime.textContent = "בדוק רשת";
