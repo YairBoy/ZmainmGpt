@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://unpkg.com/kosher-zmanim@0.9.0/dist/kosher-zmanim.min.js"></script>
   <script defer src="./app.js"></script>
 </head>
@@ -36,26 +37,15 @@
       <section class="sidebar">
         <section class="info-panel">
           <div class="panel-head">
-            <p class="eyebrow">היום בלוח העברי</p>
+            <p class="eyebrow">זיכרון יומי</p>
             <div class="panel-mark" aria-hidden="true"></div>
           </div>
           <div class="info-panel__main">
-            <h2 id="info-title">מחשב...</h2>
-            <p class="info-panel__subtitle" id="info-subtitle">--</p>
+            <h2 id="info-title">אין אזכרה היום</h2>
+            <p class="info-panel__subtitle" id="info-subtitle">הרשימה נטענת מקובץ ההנצחה באתר</p>
           </div>
-          <div class="info-panel__list">
-            <div class="info-item">
-              <span class="info-item__label">יום בשבוע</span>
-              <span class="info-item__value" id="weekday-value">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-item__label">פרשה / אירוע</span>
-              <span class="info-item__value info-item__value--small" id="holiday-value">--</span>
-            </div>
-            <div class="info-item">
-              <span class="info-item__label">ספירה / הערה</span>
-              <span class="info-item__value info-item__value--small" id="omer-value">--</span>
-            </div>
+          <div class="custom-panel">
+            <p class="custom-panel__hint">ערוך את הקובץ `display/data/memorials.xlsx` או `display/data/memorials.csv`, העלה ל־git, והמסך יטען אותו אוטומטית.</p>
           </div>
         </section>
 
