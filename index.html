@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>זמני היום לימסול</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://unpkg.com/kosher-zmanim@0.9.0/dist/kosher-zmanim.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <main class="screen shell">
+    <section class="topbar">
+      <div class="title-block">
+        <p class="eyebrow">זמני היום</p>
+        <h1 id="location-name">לימסול</h1>
+        <p class="subhead" id="date-label">טוען תאריך...</p>
+      </div>
+      <div class="clock-card">
+        <div class="clock-card__label">השעה כעת</div>
+        <div class="clock-card__time" id="current-time">--:--</div>
+      </div>
+    </section>
+
+    <section class="board">
+      <section class="shabbat-panel">
+        <div class="panel-head">
+          <p class="eyebrow">השבת הקרובה</p>
+          <div class="panel-mark" aria-hidden="true"></div>
+        </div>
+        <h2 id="shabbat-title">מחשב...</h2>
+        <div class="shabbat-panel__rows">
+          <div class="shabbat-row">
+            <div>
+              <p class="shabbat-row__label">הדלקת נרות</p>
+              <p class="shabbat-row__date" id="candle-date">--</p>
+            </div>
+            <div class="shabbat-row__time" id="candle-time">--:--</div>
+          </div>
+          <div class="shabbat-row">
+            <div>
+              <p class="shabbat-row__label">צאת השבת</p>
+              <p class="shabbat-row__date" id="havdalah-date">--</p>
+            </div>
+            <div class="shabbat-row__time" id="havdalah-time">--:--</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="schedule">
+        <div class="schedule__header">
+          <span class="schedule__title">לוח הזמנים</span>
+          <span>זמן</span>
+          <span>שעה</span>
+        </div>
+        <section class="grid" id="zmanim-grid" aria-live="polite"></section>
+      </section>
+    </section>
+
+  </main>
+</body>
+</html>
