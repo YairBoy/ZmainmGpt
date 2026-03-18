@@ -6,9 +6,7 @@
   --text: #172123;
   --muted: #66726f;
   --accent: #c89f47;
-  --accent-soft: #edd6a1;
   --accent-deep: #183f3b;
-  --line: rgba(23, 33, 35, 0.1);
   --shadow: 0 28px 90px rgba(0, 0, 0, 0.26);
 }
 
@@ -39,16 +37,17 @@ body {
 .shell {
   width: 100%;
   height: 100%;
-  margin: 0;
-  padding: 2.35vh 2.35vh 2vh;
+  padding: 2.35vh;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 1.8vh;
+  gap: 1.6vh;
   overflow: hidden;
 }
 
 .topbar,
 .board,
+.sidebar,
+.info-panel,
 .shabbat-panel,
 .grid {
   opacity: 0;
@@ -56,6 +55,7 @@ body {
   animation: rise 0.6s ease forwards;
 }
 
+.info-panel,
 .shabbat-panel {
   animation-delay: 0.08s;
 }
@@ -67,8 +67,8 @@ body {
 .topbar {
   display: flex;
   justify-content: space-between;
-  gap: 1.8vw;
   align-items: center;
+  gap: 1.2rem;
 }
 
 .title-block {
@@ -76,34 +76,35 @@ body {
 }
 
 .eyebrow {
-  margin: 0 0 8px;
+  margin: 0 0 0.35rem;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   color: var(--accent);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 800;
 }
 
 h1,
 h2,
 .clock-card__time,
+.info-item__value,
+.shabbat-row__time,
 .zman-card__time {
   font-family: "Rubik", sans-serif;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(3.4rem, 5.1vw, 6rem);
-  line-height: 0.88;
+  font-size: clamp(3.1rem, 4.8vw, 5.6rem);
+  line-height: 0.9;
   letter-spacing: -0.03em;
   color: #f7f2e3;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
 }
 
 .subhead {
-  margin: 12px 0 0;
+  margin: 0.45rem 0 0;
   color: rgba(247, 242, 227, 0.78);
-  font-size: clamp(0.98rem, 1.35vw, 1.18rem);
+  font-size: clamp(0.92rem, 1.15vw, 1.08rem);
 }
 
 .clock-card {
@@ -121,12 +122,11 @@ h1 {
 .clock-card__label {
   color: rgba(247, 242, 227, 0.72);
   font-size: 0.9rem;
-  margin-bottom: 10px;
+  margin-bottom: 0.45rem;
 }
 
 .clock-card__time {
   display: block;
-  width: 100%;
   min-width: 9ch;
   font-size: clamp(2.8rem, 4vw, 4.6rem);
   line-height: 1;
@@ -139,35 +139,136 @@ h1 {
 
 .board {
   display: grid;
-  grid-template-columns: minmax(31rem, 34rem) minmax(0, 1fr);
-  gap: 1.1rem;
+  grid-template-columns: minmax(22rem, 24rem) minmax(0, 1fr);
+  gap: 1rem;
   min-height: 0;
-  overflow: hidden;
 }
 
+.schedule,
+.sidebar {
+  min-height: 0;
+}
+
+.sidebar {
+  display: grid;
+  grid-template-rows: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 1rem;
+}
+
+.info-panel,
 .shabbat-panel,
 .schedule {
-  background: var(--panel);
+  border-radius: 30px;
   border: 1px solid rgba(255, 255, 255, 0.36);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
+  overflow: hidden;
 }
 
+.schedule {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 0.95rem 0.95rem 0.8rem;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 243, 0.98), rgba(247, 242, 229, 0.94)),
+    var(--panel-strong);
+}
+
+.schedule__header {
+  display: flex;
+  align-items: end;
+  justify-content: flex-start;
+  padding: 0.2rem 0.45rem 0.8rem;
+  border-bottom: 1px solid rgba(23, 33, 35, 0.08);
+}
+
+.schedule__title {
+  color: var(--accent-deep);
+  font-family: "Rubik", sans-serif;
+  font-size: 1.12rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.42rem;
+  padding-top: 0.7rem;
+  min-height: 0;
+  overflow: hidden;
+  align-content: start;
+}
+
+.zman-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.78rem;
+  padding: 0.72rem 0.9rem 0.72rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(23, 33, 35, 0.04);
+}
+
+.zman-card--next {
+  background: linear-gradient(135deg, rgba(24, 63, 59, 0.13), rgba(237, 214, 161, 0.34));
+  border-color: rgba(24, 63, 59, 0.18);
+}
+
+.zman-card--past {
+  opacity: 0.46;
+}
+
+.zman-card__time {
+  min-width: 4.2ch;
+  font-size: clamp(1.72rem, 1.8vw, 1.95rem);
+  line-height: 1;
+  color: var(--accent-deep);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.zman-card__meta {
+  min-width: 0;
+}
+
+.zman-card__label {
+  margin: 0;
+  font-size: clamp(0.98rem, 1vw, 1.08rem);
+  font-weight: 700;
+}
+
+.zman-card__detail {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: clamp(0.68rem, 0.72vw, 0.76rem);
+}
+
+.info-panel,
 .shabbat-panel {
-  border-radius: 32px;
-  padding: 1.45rem 1.5rem 1.25rem;
   display: grid;
   grid-template-rows: auto auto 1fr;
   align-content: start;
+  padding: 1.35rem 1.45rem 1.15rem;
+  position: relative;
+}
+
+.info-panel {
+  background:
+    radial-gradient(circle at top right, rgba(24, 63, 59, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(249, 246, 236, 0.98), rgba(235, 240, 235, 0.95)),
+    var(--panel);
+}
+
+.shabbat-panel {
   background:
     radial-gradient(circle at top right, rgba(200, 159, 71, 0.24), transparent 28%),
     linear-gradient(180deg, rgba(255, 249, 234, 0.98), rgba(241, 232, 206, 0.94)),
     var(--panel);
-  position: relative;
-  overflow: hidden;
-  min-height: 0;
 }
 
+.info-panel::after,
 .shabbat-panel::after {
   content: "";
   position: absolute;
@@ -184,8 +285,8 @@ h1 {
 }
 
 .panel-mark {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   border: 1px solid rgba(24, 63, 59, 0.12);
   background:
@@ -193,26 +294,73 @@ h1 {
     linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(237, 214, 161, 0.28));
 }
 
+.info-panel__main {
+  margin-top: 0.7rem;
+}
+
+.info-panel h2,
 .shabbat-panel h2 {
-  margin: 0.7rem 0 0;
-  font-size: clamp(2.5rem, 3.4vw, 3.8rem);
-  line-height: 0.92;
-  max-width: 10ch;
+  margin: 0;
+  font-size: clamp(2.25rem, 2.8vw, 3.3rem);
+  line-height: 0.94;
   color: var(--accent-deep);
+}
+
+.info-panel__subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: clamp(0.88rem, 0.9vw, 0.96rem);
+}
+
+.info-panel__list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.95rem;
+}
+
+.info-item {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.76rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid rgba(24, 63, 59, 0.08);
+}
+
+.info-item__label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.info-item__value {
+  color: var(--accent-deep);
+  font-size: 1.16rem;
+  line-height: 1.2;
+}
+
+.info-item__value--small {
+  font-family: "Heebo", sans-serif;
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.shabbat-panel h2 {
+  margin-top: 0.65rem;
 }
 
 .shabbat-panel__rows {
   display: grid;
-  gap: 0.9rem;
-  margin-top: 1.25rem;
+  gap: 0.85rem;
+  margin-top: 1rem;
 }
 
 .shabbat-row {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1rem;
+  gap: 0.9rem;
+  padding: 0.95rem;
   border-radius: 22px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 249, 236, 0.82));
   border: 1px solid rgba(200, 159, 71, 0.18);
@@ -220,122 +368,24 @@ h1 {
 
 .shabbat-row__label {
   margin: 0;
-  font-size: clamp(1.15rem, 1.32vw, 1.38rem);
+  font-size: clamp(1.08rem, 1.12vw, 1.2rem);
   font-weight: 700;
 }
 
 .shabbat-row__date {
-  margin: 0.35vh 0 0;
-  color: var(--muted);
-  font-size: clamp(0.85rem, 0.95vw, 1rem);
-}
-
-.shabbat-row__time {
-  font-family: "Rubik", sans-serif;
-  font-size: clamp(2.5rem, 3.2vw, 3.8rem);
-  line-height: 1;
-  color: var(--accent-deep);
-  white-space: nowrap;
-  text-align: left;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "lnum" 1;
-}
-
-.schedule {
-  border-radius: 32px;
-  padding: 1rem 1rem 0.85rem;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 0;
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255, 251, 243, 0.98), rgba(247, 242, 229, 0.94)),
-    var(--panel-strong);
-}
-
-.schedule__header {
-  display: flex;
-  align-items: end;
-  justify-content: flex-start;
-  padding: 0.25rem 0.5rem 0.9rem;
-  border-bottom: 1px solid rgba(23, 33, 35, 0.08);
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.schedule__title {
-  color: var(--accent-deep);
-  font-family: "Rubik", sans-serif;
-  font-size: 1.18rem;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-  align-content: start;
-  padding-top: 0.75rem;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.zman-card {
-  padding: 0.8rem 1rem 0.8rem 1.05rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.34);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.7rem;
-  border: 1px solid rgba(23, 33, 35, 0.04);
-  min-height: 0;
-}
-
-.zman-card--next {
-  background: linear-gradient(135deg, rgba(24, 63, 59, 0.13), rgba(237, 214, 161, 0.34));
-  border-color: rgba(24, 63, 59, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-}
-
-.zman-card--past {
-  opacity: 0.46;
-}
-
-.zman-card__label {
-  margin: 0;
-  font-size: clamp(1.08rem, 1.24vw, 1.28rem);
-  font-weight: 700;
-}
-
-.zman-card__meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  width: 100%;
-}
-
-.zman-card__detail {
-  margin: 4px 0 0;
+  margin: 0.18rem 0 0;
   color: var(--muted);
   font-size: clamp(0.8rem, 0.82vw, 0.9rem);
 }
 
-.zman-card__time {
-  font-size: clamp(2rem, 2.45vw, 2.66rem);
-  white-space: nowrap;
+.shabbat-row__time {
+  font-size: clamp(2.32rem, 2.6vw, 3.2rem);
   line-height: 1;
+  color: var(--accent-deep);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
-  text-align: right;
-  color: var(--accent-deep);
-  order: -1;
+  white-space: nowrap;
+  text-align: left;
 }
 
 @keyframes rise {
@@ -345,72 +395,44 @@ h1 {
   }
 }
 
-@media (min-aspect-ratio: 16/9) and (min-width: 1200px) {
-  .board {
-    grid-template-columns: minmax(31rem, 33.5rem) minmax(0, 1fr);
-  }
-
-  .shabbat-panel {
-    padding: 1.45rem 1.5rem 1.25rem;
-  }
-
-  .shabbat-row__time {
-    font-size: clamp(2.6rem, 3vw, 4rem);
-  }
-
-  .grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    column-gap: 0.75rem;
-    row-gap: 0.55rem;
-    align-content: stretch;
-  }
-
-  .zman-card {
-    min-height: 10.6rem;
-  }
-}
-
 @media (max-width: 980px) {
   .shell {
-    height: 100vh;
     padding: 16px;
     gap: 12px;
   }
 
-  .topbar,
-  .board,
-  .zman-card {
-    grid-template-columns: 1fr;
-  }
-
-  .topbar,
-  .clock-card,
-  .shabbat-panel,
-  .schedule {
-    width: 100%;
-  }
-
   .topbar {
-    display: flex;
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .clock-card {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    grid-template-rows: auto auto;
+  }
+
+  .clock-card,
+  .schedule,
+  .info-panel,
+  .shabbat-panel {
+    width: 100%;
     min-width: 0;
+  }
+
+  .clock-card {
     text-align: right;
-  }
-
-  .shabbat-panel h2 {
-    max-width: none;
-  }
-
-  .schedule__header {
-    display: flex;
   }
 
   .clock-card__time {
     font-size: clamp(2.2rem, 8vw, 3.2rem);
+  }
+
+  .info-panel h2,
+  .shabbat-panel h2 {
+    max-width: none;
   }
 
   .shabbat-row {
@@ -419,31 +441,11 @@ h1 {
   }
 
   .shabbat-row__time {
-    font-size: clamp(2.3rem, 10vw, 3.6rem);
     text-align: right;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .zman-card {
-    min-height: 0;
-  }
-
-  .zman-card {
-    padding: 10px 12px;
-  }
-
-  .zman-card__label {
-    font-size: 1rem;
-  }
-
-  .zman-card__detail {
-    font-size: 0.78rem;
+    font-size: clamp(2.3rem, 10vw, 3.6rem);
   }
 
   .zman-card__time {
-    font-size: 1.7rem;
+    font-size: 1.6rem;
   }
 }

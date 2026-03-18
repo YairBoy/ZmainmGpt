@@ -74,12 +74,22 @@ const els = {
   locationName: document.getElementById("location-name"),
   dateLabel: document.getElementById("date-label"),
   currentTime: document.getElementById("current-time"),
+  infoTitle: document.getElementById("info-title"),
+  infoSubtitle: document.getElementById("info-subtitle"),
+  weekdayValue: document.getElementById("weekday-value"),
+  holidayValue: document.getElementById("holiday-value"),
+  omerValue: document.getElementById("omer-value"),
   shabbatTitle: document.getElementById("shabbat-title"),
   candleDate: document.getElementById("candle-date"),
   candleTime: document.getElementById("candle-time"),
   havdalahDate: document.getElementById("havdalah-date"),
   havdalahTime: document.getElementById("havdalah-time"),
   grid: document.getElementById("zmanim-grid")
+};
+
+let hebcalCache = {
+  key: null,
+  data: null
 };
 
 function parseConfig() {
@@ -221,6 +231,13 @@ function formatHebrewShortDate(dateTime, timeZoneId) {
   }).format(dateTime.toJSDate());
 }
 
+function formatHebrewWeekday(timeZoneId) {
+  return new Intl.DateTimeFormat("he-IL", {
+    timeZone: timeZoneId,
+    weekday: "long"
+  }).format(new Date());
+}
+
 function getNextZman(zmanim, timeZoneId) {
   const now = window.KosherZmanim.DateTime.now().setZone(timeZoneId);
 
@@ -231,6 +248,84 @@ function getNextZman(zmanim, timeZoneId) {
   }
 
   return null;
+}
+
+async function fetchHebcalData(config) {
+  const { DateTime } = window.KosherZmanim;
+  const today = DateTime.now().setZone(config.timeZoneId).toISODate();
+  const cacheKey = `${today}:${config.latitude}:${config.longitude}:${config.timeZoneId}`;
+
+  if (hebcalCache.key === cacheKey) {
+    return hebcalCache.data;
+  }
+
+  const url = new URL("https://www.hebcal.com/hebcal");
+  url.searchParams.set("v", "1");
+  url.searchParams.set("cfg", "json");
+  url.searchParams.set("start", today);
+  url.searchParams.set("end", today);
+  url.searchParams.set("maj", "on");
+  url.searchParams.set("min", "on");
+  url.searchParams.set("mod", "on");
+  url.searchParams.set("nx", "on");
+  url.searchParams.set("mf", "on");
+  url.searchParams.set("ss", "on");
+  url.searchParams.set("s", "on");
+  url.searchParams.set("d", "on");
+  url.searchParams.set("o", "on");
+  url.searchParams.set("lg", "he");
+  url.searchParams.set("geo", "pos");
+  url.searchParams.set("latitude", String(config.latitude));
+  url.searchParams.set("longitude", String(config.longitude));
+  url.searchParams.set("tzid", config.timeZoneId);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Hebcal request failed with ${response.status}`);
+  }
+
+  const data = await response.json();
+  hebcalCache = { key: cacheKey, data };
+  return data;
+}
+
+function pickHebcalContent(items) {
+  const timedCategories = new Set(["hebdate"]);
+  const filtered = items.filter((item) => !timedCategories.has(item.category));
+  const firstHoliday = filtered.find((item) => ["holiday", "roshchodesh", "mevarchim", "omer"].includes(item.category));
+  const firstParsha = filtered.find((item) => item.category === "parashat");
+  const firstOmer = filtered.find((item) => item.category === "omer");
+
+  return {
+    holiday: firstHoliday?.hebrew || firstHoliday?.title || "יום רגיל",
+    parsha: firstParsha?.hebrew || firstParsha?.title || "ללא אירוע מיוחד",
+    omer: firstOmer?.hebrew || firstOmer?.title || "אין ספירה היום"
+  };
+}
+
+async function renderInfoPanel(config) {
+  const hebrewDate = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
+    timeZone: config.timeZoneId,
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(new Date());
+
+  els.infoTitle.textContent = hebrewDate;
+  els.infoSubtitle.textContent = config.locationName;
+  els.weekdayValue.textContent = formatHebrewWeekday(config.timeZoneId);
+  els.holidayValue.textContent = "טוען...";
+  els.omerValue.textContent = "טוען...";
+
+  try {
+    const data = await fetchHebcalData(config);
+    const content = pickHebcalContent(data.items || []);
+    els.holidayValue.textContent = content.holiday === "יום רגיל" ? content.parsha : content.holiday;
+    els.omerValue.textContent = content.omer === "אין ספירה היום" ? content.parsha : content.omer;
+  } catch (error) {
+    els.holidayValue.textContent = "לא נטען";
+    els.omerValue.textContent = "לא נטען";
+  }
 }
 
 function getUpcomingShabbat(config) {
@@ -314,6 +409,11 @@ function renderGrid(zmanim, nextKey, config) {
 
 function render(config) {
   if (!window.KosherZmanim) {
+    els.infoTitle.textContent = "טעינת הספרייה נכשלה";
+    els.infoSubtitle.textContent = "--";
+    els.weekdayValue.textContent = "--";
+    els.holidayValue.textContent = "בדוק רשת";
+    els.omerValue.textContent = "בדוק רשת";
     els.shabbatTitle.textContent = "טעינת הספרייה נכשלה";
     els.candleDate.textContent = "--";
     els.candleTime.textContent = "בדוק רשת";
@@ -337,6 +437,7 @@ function render(config) {
   els.locationName.textContent = config.locationName;
   els.dateLabel.textContent = formatDateLabel(config.timeZoneId);
   els.currentTime.textContent = formatCurrentTime(config.timeZoneId);
+  renderInfoPanel(config);
   renderShabbatPanel(config);
   renderGrid(zmanim, nextZman?.key, config);
 }

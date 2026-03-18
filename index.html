@@ -26,35 +26,62 @@
     </section>
 
     <section class="board">
-      <section class="shabbat-panel">
-        <div class="panel-head">
-          <p class="eyebrow">השבת הקרובה</p>
-          <div class="panel-mark" aria-hidden="true"></div>
-        </div>
-        <h2 id="shabbat-title">מחשב...</h2>
-        <div class="shabbat-panel__rows">
-          <div class="shabbat-row">
-            <div>
-              <p class="shabbat-row__label">הדלקת נרות</p>
-              <p class="shabbat-row__date" id="candle-date">--</p>
-            </div>
-            <div class="shabbat-row__time" id="candle-time">--:--</div>
-          </div>
-          <div class="shabbat-row">
-            <div>
-              <p class="shabbat-row__label">צאת השבת</p>
-              <p class="shabbat-row__date" id="havdalah-date">--</p>
-            </div>
-            <div class="shabbat-row__time" id="havdalah-time">--:--</div>
-          </div>
-        </div>
-      </section>
-
       <section class="schedule">
         <div class="schedule__header">
           <span class="schedule__title">לוח הזמנים</span>
         </div>
         <section class="grid" id="zmanim-grid" aria-live="polite"></section>
+      </section>
+
+      <section class="sidebar">
+        <section class="info-panel">
+          <div class="panel-head">
+            <p class="eyebrow">היום בלוח העברי</p>
+            <div class="panel-mark" aria-hidden="true"></div>
+          </div>
+          <div class="info-panel__main">
+            <h2 id="info-title">מחשב...</h2>
+            <p class="info-panel__subtitle" id="info-subtitle">--</p>
+          </div>
+          <div class="info-panel__list">
+            <div class="info-item">
+              <span class="info-item__label">יום בשבוע</span>
+              <span class="info-item__value" id="weekday-value">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item__label">פרשה / אירוע</span>
+              <span class="info-item__value info-item__value--small" id="holiday-value">--</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item__label">ספירה / הערה</span>
+              <span class="info-item__value info-item__value--small" id="omer-value">--</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="shabbat-panel">
+          <div class="panel-head">
+            <p class="eyebrow">השבת הקרובה</p>
+            <div class="panel-mark" aria-hidden="true"></div>
+          </div>
+          <h2 id="shabbat-title">מחשב...</h2>
+          <div class="shabbat-panel__rows">
+            <div class="shabbat-row">
+              <div>
+                <p class="shabbat-row__label">הדלקת נרות</p>
+                <p class="shabbat-row__date" id="candle-date">--</p>
+              </div>
+              <div class="shabbat-row__time" id="candle-time">--:--</div>
+            </div>
+            <div class="shabbat-row">
+              <div>
+                <p class="shabbat-row__label">צאת השבת</p>
+                <p class="shabbat-row__date" id="havdalah-date">--</p>
+              </div>
+              <div class="shabbat-row__time" id="havdalah-time">--:--</div>
+            </div>
+          </div>
+        </section>
       </section>
     </section>
 
