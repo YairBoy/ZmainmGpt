@@ -300,13 +300,13 @@ function renderGrid(zmanim, nextKey, config) {
     const isPast = zman.dateTime && zman.dateTime <= now;
     card.className = `zman-card${zman.key === nextKey ? " zman-card--next" : ""}${isPast ? " zman-card--past" : ""}`;
     card.innerHTML = `
+      <div class="zman-card__time">${formatTime(zman.dateTime, config.timeZoneId)}</div>
       <div class="zman-card__meta">
         <div>
-        <p class="zman-card__label">${zman.label}</p>
-        <p class="zman-card__detail">${zman.detail}</p>
+          <p class="zman-card__label">${zman.label}</p>
+          <p class="zman-card__detail">${zman.detail}</p>
         </div>
       </div>
-      <div class="zman-card__time">${formatTime(zman.dateTime, config.timeZoneId)}</div>
     `;
     els.grid.appendChild(card);
   }
